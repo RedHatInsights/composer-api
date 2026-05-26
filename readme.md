@@ -1,3 +1,3 @@
 # Composer API
 
-A set of APIs for Red Hat customers to manage available features on their workspaces.
+A set of APIs to allow users to manage their available features on their workspaces.
