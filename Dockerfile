@@ -1,4 +1,4 @@
-FROM golang:1.26-alpine AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:latest AS builder
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ COPY main.go .
 
 RUN go build -o composer-api main.go
 
-FROM alpine:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest 
 
 WORKDIR /app
 
