@@ -6,10 +6,12 @@ COPY main.go .
 
 RUN go build -o composer-api main.go
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest 
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 WORKDIR /app
 
 COPY --from=builder /app/composer-api .
+
+USER 1001
 
 CMD ["./composer-api"]
