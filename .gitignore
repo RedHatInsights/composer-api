@@ -1,0 +1,21 @@
+# Binaries
+composer-api
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Config files (may contain secrets) — use config.sample.yaml as a template
+configs/config.yaml

@@ -1,0 +1,66 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    description: Composer API service for Red Hat Insights
+  name: composer-api
+parameters:
+  - name: ENV_NAME
+    value: env-composer-api
+  - name: REPLICAS
+    value: '1'
+  - name: IMAGE
+    value: quay.io/redhat-user-workloads/teamnado-konflux-tenant/composer-api
+  - name: IMAGE_TAG
+    value: latest
+  - name: MEMORY_REQUEST
+    value: 128Mi
+  - name: MEMORY_LIMIT
+    value: 256Mi
+  - name: CPU_REQUEST
+    value: 100m
+  - name: CPU_LIMIT
+    value: 500m
+  - name: PORT
+    value: '8080'
+objects:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: composer-api
+    labels:
+      app: composer-api
+  spec:
+    envName: ${ENV_NAME}
+
+    deployments:
+      - name: service
+        replicas: ${{REPLICAS}}
+        podSpec:
+          image: ${IMAGE}:${IMAGE_TAG}
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: ${{PORT}}
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: ${{PORT}}
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: ${CPU_REQUEST}
+              memory: ${MEMORY_REQUEST}
+            limits:
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}

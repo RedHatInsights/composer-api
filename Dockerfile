@@ -8,15 +8,21 @@ RUN chown -R 1001:0 /app
 
 USER 1001
 
-COPY main.go .
+COPY go.mod go.sum ./
+RUN go mod download
 
-RUN go build -o composer-api main.go
+COPY cmd/ cmd/
+COPY internal/ internal/
+
+RUN go build -o composer-api ./cmd/composer-api
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 WORKDIR /app
 
 COPY --from=builder /app/composer-api .
+
+EXPOSE 8080
 
 USER 1001
 
