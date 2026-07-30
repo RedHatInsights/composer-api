@@ -11,6 +11,7 @@ DOCKER=$(shell which podman || which docker || echo 'docker')
 # Builds the project.
 build:
 	@echo "+$@"
+	@mkdir -p bin
 	@go build -o bin/$(APPLICATION_BINARY_NAME) ./cmd/$(APPLICATION_NAME)
 
 # Runs the project after tidying and building it anew.

@@ -14,7 +14,7 @@ make clean    # remove bin/ and coverage.out
 
 ## Project Structure
 
-```
+```text
 cmd/composer-api/        Entry point, graceful shutdown
 internal/
   config/                Viper-based config (server.port, log.level)
