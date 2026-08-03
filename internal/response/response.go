@@ -10,19 +10,6 @@ type Response struct {
 	Body any `json:"body"`
 }
 
-type ErrorDetails struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-type ErrorResponse struct {
-	Error ErrorDetails `json:"error"`
-}
-
-func JSONError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, ErrorResponse{Error: ErrorDetails{Code: status, Message: msg}})
-}
-
 func JSON(w http.ResponseWriter, status int, body any) {
 	writeJSON(w, status, Response{Body: body})
 }

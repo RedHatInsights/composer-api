@@ -87,6 +87,40 @@ func TestLoad_PartialConfig(t *testing.T) {
 	}
 }
 
+func TestLoad_InvalidLogLevel(t *testing.T) {
+	dir := t.TempDir()
+	configFile := filepath.Join(dir, "config.yaml")
+
+	content := []byte("log:\n  level: \"verbose\"\n")
+	if err := os.WriteFile(configFile, content, 0644); err != nil {
+		t.Fatalf("failed to write config file: %v", err)
+	}
+
+	chdir(t, dir)
+
+	_, err := Load()
+	if err == nil {
+		t.Error("expected error for invalid log level, got nil")
+	}
+}
+
+func TestLoad_EmptyPort(t *testing.T) {
+	dir := t.TempDir()
+	configFile := filepath.Join(dir, "config.yaml")
+
+	content := []byte("server:\n  port: \"\"\n")
+	if err := os.WriteFile(configFile, content, 0644); err != nil {
+		t.Fatalf("failed to write config file: %v", err)
+	}
+
+	chdir(t, dir)
+
+	_, err := Load()
+	if err == nil {
+		t.Error("expected error for empty port, got nil")
+	}
+}
+
 func TestLoad_InvalidYAML(t *testing.T) {
 	dir := t.TempDir()
 	configFile := filepath.Join(dir, "config.yaml")

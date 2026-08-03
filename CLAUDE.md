@@ -17,13 +17,13 @@ make clean    # remove bin/ and coverage.out
 ```text
 cmd/composer-api/        Entry point, graceful shutdown
 internal/
-  config/                Viper-based config (server.port, log.level)
-  logger/                slog JSON logger with ContextHandler for automatic context propagation
-  middleware/            One file per middleware (requestid, logging, recover, chain)
+  config/                Viper-based config with validation (server.port, log.level, log.pretty)
+  logger/                slog logger with ContextHandler; JSON (production) or text (pretty mode)
+  middleware/            One file per middleware (requestid, logging, recover, chain, cors, bodysize)
   handler/
     probe/               Liveness/readiness endpoints (ping, health)
     v1/workspace/        v1 workspace API handlers
-  response/              JSON response helpers (success wrapper, error shape)
+  response/              JSON response helpers, typed HTTP errors
   server/                HTTP server, route registration
 ```
 
@@ -52,7 +52,9 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) { ... }
 
 ### Response shapes
 - Success: `{"body": {...}}`
-- Error: `{"error": {"code": N, "message": "..."}}`
+- Error: `{"status": "Not Found", "reason": "workspace not found"}`
+- Use typed error factories: `response.NotFound().WithReasonStr("...")`, not raw status codes.
+- `response.WriteError(w, err)` writes the error with the correct HTTP status.
 
 ### Logging
 - Use `slog.InfoContext`/`slog.ErrorContext` (not `slog.Info`/`slog.Error`) so request_id propagates automatically via ContextHandler.

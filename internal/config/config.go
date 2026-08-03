@@ -1,8 +1,13 @@
 package config
 
 import (
+	"fmt"
+	"slices"
+
 	"github.com/spf13/viper"
 )
+
+var validLogLevels = []string{"debug", "info", "warn", "error"}
 
 // Config holds all application configuration.
 // Add new fields here as the application grows.
@@ -53,5 +58,28 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 
+	if err := validate(cfg); err != nil {
+		return Config{}, err
+	}
+
 	return cfg, nil
+}
+
+func validate(cfg Config) error {
+	if cfg.Server.Port == "" {
+		return fmt.Errorf("server.port must not be empty")
+	}
+	if len(cfg.Server.AllowedOrigins) == 0 {
+		return fmt.Errorf("server.allowed_origins must not be empty")
+	}
+	if cfg.Server.CORSMaxAge <= 0 {
+		return fmt.Errorf("server.cors_max_age must be positive")
+	}
+	if cfg.Server.MaxBodyBytes <= 0 {
+		return fmt.Errorf("server.max_body_bytes must be positive")
+	}
+	if !slices.Contains(validLogLevels, cfg.Log.Level) {
+		return fmt.Errorf("log.level must be one of %v, got %q", validLogLevels, cfg.Log.Level)
+	}
+	return nil
 }
