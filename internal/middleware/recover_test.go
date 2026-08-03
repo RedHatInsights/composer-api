@@ -24,17 +24,13 @@ func TestRecover_CatchesPanic(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, rec.Code)
 	}
 
-	var resp response.ErrorResponse
+	var resp response.Error
 	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	if resp.Error.Code != http.StatusInternalServerError {
-		t.Errorf("expected error code %d, got %d", http.StatusInternalServerError, resp.Error.Code)
-	}
-
-	if resp.Error.Message != "internal server error" {
-		t.Errorf("expected error message %q, got %q", "internal server error", resp.Error.Message)
+	if resp.Status != "Internal Server Error" {
+		t.Errorf("expected status %q, got %q", "Internal Server Error", resp.Status)
 	}
 }
 

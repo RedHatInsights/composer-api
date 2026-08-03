@@ -25,7 +25,7 @@ func Recover(next http.Handler) http.Handler {
 				"stack", stack,
 			)
 
-			response.JSONError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, response.InternalServerError())
 		}()
 
 		next.ServeHTTP(w, r)

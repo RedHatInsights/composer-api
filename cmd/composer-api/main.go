@@ -20,7 +20,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Init(os.Stdout, cfg.Log.Level)
+	logger.Init(os.Stdout, cfg.Log.Level, cfg.Log.Pretty)
 
 	// Root context is canceled on SIGINT/SIGTERM or if the server
 	// goroutine exits, triggering the graceful shutdown sequence.

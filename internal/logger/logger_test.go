@@ -3,12 +3,13 @@ package logger
 import (
 	"bytes"
 	"log/slog"
+	"strings"
 	"testing"
 )
 
 func TestInit_SetsDefaultLogger(t *testing.T) {
 	var buf bytes.Buffer
-	Init(&buf, "info")
+	Init(&buf, "info", false)
 
 	slog.Info("test message", "key", "value")
 
@@ -20,7 +21,7 @@ func TestInit_SetsDefaultLogger(t *testing.T) {
 
 func TestInit_RespectsLevel(t *testing.T) {
 	var buf bytes.Buffer
-	Init(&buf, "error")
+	Init(&buf, "error", false)
 
 	slog.Info("should not appear")
 
@@ -47,5 +48,32 @@ func TestParseLevel(t *testing.T) {
 		if got := parseLevel(tt.input); got != tt.expected {
 			t.Errorf("parseLevel(%q) = %v, want %v", tt.input, got, tt.expected)
 		}
+	}
+}
+
+func TestInit_PrettyMode(t *testing.T) {
+	var buf bytes.Buffer
+	Init(&buf, "info", true)
+
+	slog.Info("pretty test", "key", "value")
+
+	output := buf.String()
+	if output == "" {
+		t.Fatal("expected log output, got empty string")
+	}
+	if strings.Contains(output, `"msg"`) {
+		t.Error("pretty mode should not produce JSON output")
+	}
+}
+
+func TestInit_JSONMode(t *testing.T) {
+	var buf bytes.Buffer
+	Init(&buf, "info", false)
+
+	slog.Info("json test", "key", "value")
+
+	output := buf.String()
+	if !strings.Contains(output, `"msg"`) {
+		t.Error("JSON mode should produce JSON output with \"msg\" field")
 	}
 }

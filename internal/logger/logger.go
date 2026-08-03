@@ -8,11 +8,19 @@ import (
 
 // Init creates a new slog logger and sets it as the default.
 // Level should be one of "debug", "info", "warn", or "error".
-func Init(destination io.Writer, level string) {
+// When pretty is true, logs are formatted as human-readable text for local development.
+func Init(destination io.Writer, level string, pretty bool) {
 	slogLevel := parseLevel(level)
-	jsonHandler := slog.NewJSONHandler(destination, &slog.HandlerOptions{AddSource: true, Level: slogLevel})
-	handler := ContextHandler{Handler: jsonHandler}
-	slog.SetDefault(slog.New(handler))
+	opts := &slog.HandlerOptions{AddSource: true, Level: slogLevel}
+
+	var base slog.Handler
+	if pretty {
+		base = slog.NewTextHandler(destination, opts)
+	} else {
+		base = slog.NewJSONHandler(destination, opts)
+	}
+
+	slog.SetDefault(slog.New(ContextHandler{Handler: base}))
 }
 
 func parseLevel(level string) slog.Level {

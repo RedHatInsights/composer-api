@@ -19,7 +19,8 @@ type ServerConfig struct {
 }
 
 type LogConfig struct {
-	Level string `mapstructure:"level"`
+	Level  string `mapstructure:"level"`
+	Pretty bool   `mapstructure:"pretty"`
 }
 
 // Load reads configuration from a config.yaml file.
@@ -32,6 +33,7 @@ func Load() (Config, error) {
 	v.SetDefault("server.cors_max_age", 3600)
 	v.SetDefault("server.max_body_bytes", 1048576)
 	v.SetDefault("log.level", "info")
+	v.SetDefault("log.pretty", false)
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
