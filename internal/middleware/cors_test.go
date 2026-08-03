@@ -82,11 +82,31 @@ func TestCORS_PreflightDisallowed(t *testing.T) {
 
 	handler.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusNoContent {
-		t.Errorf("expected status %d, got %d", http.StatusNoContent, rec.Code)
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
 	}
 	if got := rec.Header().Get("Access-Control-Allow-Methods"); got != "" {
 		t.Errorf("expected no Allow-Methods header, got %q", got)
+	}
+}
+
+func TestCORS_NonCORSOptions(t *testing.T) {
+	called := false
+	handler := CORS([]string{"https://example.com"}, 3600)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodOptions, "/test", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if !called {
+		t.Error("expected handler to be called for non-CORS OPTIONS request")
+	}
+	if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("expected no Allow-Origin header, got %q", got)
 	}
 }
 

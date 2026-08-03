@@ -18,4 +18,5 @@ vendor/
 go.work
 
 # Config files (may contain secrets) — use config.sample.yaml as a template
+config.yaml
 configs/config.yaml

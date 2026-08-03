@@ -7,6 +7,7 @@ import (
 	"github.com/RedHatInsights/composer-api/internal/handler/probe"
 	"github.com/RedHatInsights/composer-api/internal/handler/v1/workspace"
 	"github.com/RedHatInsights/composer-api/internal/middleware"
+	"github.com/RedHatInsights/composer-api/internal/response"
 )
 
 // registerRoutes registers probe routes for liveness/readiness checks
@@ -26,6 +27,9 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) {
 	probeMux := http.NewServeMux()
 	probeMux.HandleFunc("GET /ping", probeHandler.Ping)
 	probeMux.HandleFunc("GET /health", probeHandler.Health)
+	probeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		response.WriteError(w, response.NotFound().WithReasonStr("route not found"))
+	})
 	mux.Handle("/", middleware.Recover(probeMux))
 
 	// v1 Routes

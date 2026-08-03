@@ -29,12 +29,12 @@ func main() {
 
 	srv := server.New(ctx, cfg)
 
+	var startErr error
 	go func() {
-		// cancel() ensures the main goroutine proceeds to shutdown
-		// if ListenAndServe exits unexpectedly (e.g. port conflict).
 		defer cancel()
 		slog.Info("starting server", "port", cfg.Server.Port, "log_level", cfg.Log.Level)
 		if err := srv.Start(); err != nil {
+			startErr = err
 			slog.Error("server error", "error", err)
 		}
 	}()
@@ -42,8 +42,6 @@ func main() {
 	<-ctx.Done()
 	slog.Info("shutting down server")
 
-	// Allow in-flight requests up to 30 seconds to complete before
-	// forcefully closing connections.
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
 
@@ -52,10 +50,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Close stateful dependencies (DB pools, caches, etc.) after
-	// the HTTP server has stopped accepting new requests.
 	if err := srv.Close(shutdownCtx); err != nil {
 		slog.Error("failed to close dependencies", "error", err)
+		os.Exit(1)
+	}
+
+	if startErr != nil {
 		os.Exit(1)
 	}
 

@@ -3,6 +3,7 @@ package response
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -56,11 +57,14 @@ func ToError(v any) *Error {
 		if errors.As(val, &httpErr) {
 			return httpErr
 		}
-		return InternalServerError().WithReasonErr(val)
+		slog.Error("internal error", "error", val)
+		return InternalServerError()
 	case string:
-		return InternalServerError().WithReasonStr(val)
+		slog.Error("internal error", "error", val)
+		return InternalServerError()
 	default:
-		return InternalServerError().WithReasonStr(fmt.Sprintf("%v", val))
+		slog.Error("internal error", "error", fmt.Sprintf("%v", val))
+		return InternalServerError()
 	}
 }
 

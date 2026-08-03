@@ -110,8 +110,8 @@ func TestToError(t *testing.T) {
 		if result.StatusCode != 500 {
 			t.Errorf("StatusCode = %d, want 500", result.StatusCode)
 		}
-		if result.Reason != "something broke" {
-			t.Errorf("Reason = %q, want %q", result.Reason, "something broke")
+		if result.Reason != "" {
+			t.Errorf("Reason = %q, want empty (internal details not leaked)", result.Reason)
 		}
 	})
 
@@ -120,8 +120,8 @@ func TestToError(t *testing.T) {
 		if result.StatusCode != 500 {
 			t.Errorf("StatusCode = %d, want 500", result.StatusCode)
 		}
-		if result.Reason != "bad thing" {
-			t.Errorf("Reason = %q, want %q", result.Reason, "bad thing")
+		if result.Reason != "" {
+			t.Errorf("Reason = %q, want empty (internal details not leaked)", result.Reason)
 		}
 	})
 
@@ -130,8 +130,8 @@ func TestToError(t *testing.T) {
 		if result.StatusCode != 500 {
 			t.Errorf("StatusCode = %d, want 500", result.StatusCode)
 		}
-		if result.Reason != "42" {
-			t.Errorf("Reason = %q, want %q", result.Reason, "42")
+		if result.Reason != "" {
+			t.Errorf("Reason = %q, want empty (internal details not leaked)", result.Reason)
 		}
 	})
 }

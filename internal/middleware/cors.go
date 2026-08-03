@@ -29,20 +29,12 @@ func CORS(origins []string, maxAgeSec int) func(http.Handler) http.Handler {
 			origin := r.Header.Get("Origin")
 
 			if origin == "" {
-				if r.Method == http.MethodOptions {
-					w.WriteHeader(http.StatusNoContent)
-					return
-				}
 				next.ServeHTTP(w, r)
 				return
 			}
 
 			_, ok := allowed[origin]
 			if !allowAll && !ok {
-				if r.Method == http.MethodOptions {
-					w.WriteHeader(http.StatusNoContent)
-					return
-				}
 				next.ServeHTTP(w, r)
 				return
 			}
