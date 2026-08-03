@@ -10,7 +10,7 @@ import (
 // Level should be one of "debug", "info", "warn", or "error".
 func Init(destination io.Writer, level string) {
 	slogLevel := parseLevel(level)
-	jsonHandler := slog.NewJSONHandler(destination, &slog.HandlerOptions{Level: slogLevel})
+	jsonHandler := slog.NewJSONHandler(destination, &slog.HandlerOptions{AddSource: true, Level: slogLevel})
 	handler := ContextHandler{Handler: jsonHandler}
 	slog.SetDefault(slog.New(handler))
 }

@@ -12,7 +12,10 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port string `mapstructure:"port"`
+	Port           string   `mapstructure:"port"`
+	AllowedOrigins []string `mapstructure:"allowed_origins"`
+	CORSMaxAge     int      `mapstructure:"cors_max_age"`
+	MaxBodyBytes   int64    `mapstructure:"max_body_bytes"`
 }
 
 type LogConfig struct {
@@ -25,6 +28,9 @@ func Load() (Config, error) {
 	v := viper.New()
 
 	v.SetDefault("server.port", "8080")
+	v.SetDefault("server.allowed_origins", []string{"*"})
+	v.SetDefault("server.cors_max_age", 3600)
+	v.SetDefault("server.max_body_bytes", 1048576)
 	v.SetDefault("log.level", "info")
 
 	v.SetConfigName("config")

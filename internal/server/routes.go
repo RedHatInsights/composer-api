@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/RedHatInsights/composer-api/internal/config"
 	"github.com/RedHatInsights/composer-api/internal/handler/probe"
 	"github.com/RedHatInsights/composer-api/internal/handler/v1/workspace"
 	"github.com/RedHatInsights/composer-api/internal/middleware"
@@ -10,8 +11,14 @@ import (
 
 // registerRoutes registers probe routes for liveness/readiness checks
 // and delegates versioned route groups to their own registration functions.
-func registerRoutes(mux *http.ServeMux) {
-	commonMiddleware := middleware.Chain(middleware.Recover, middleware.RequestID, middleware.Logging)
+func registerRoutes(mux *http.ServeMux, cfg config.Config) {
+	commonMiddleware := middleware.Chain(
+		middleware.Recover,
+		middleware.CORS(cfg.Server.AllowedOrigins, cfg.Server.CORSMaxAge),
+		middleware.RequestID,
+		middleware.Logging,
+		middleware.BodySizeLimit(cfg.Server.MaxBodyBytes),
+	)
 
 	// Probe routes — wrapped with Recover so panics in dependency
 	// checks (future health expansions) don't crash the process.

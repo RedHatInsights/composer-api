@@ -6,6 +6,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/RedHatInsights/composer-api/internal/config"
 )
 
 type Server struct {
@@ -15,14 +17,14 @@ type Server struct {
 // New creates an HTTP server. The provided context is used as the base
 // context for all incoming requests, so canceling it signals in-flight
 // handlers to stop work during shutdown.
-func New(ctx context.Context, port string) *Server {
+func New(ctx context.Context, cfg config.Config) *Server {
 	mux := http.NewServeMux()
-	registerRoutes(mux)
+	registerRoutes(mux, cfg)
 
 	return &Server{
 		httpServer: &http.Server{
 			BaseContext:       func(_ net.Listener) context.Context { return ctx },
-			Addr:              net.JoinHostPort("", port),
+			Addr:              net.JoinHostPort("", cfg.Server.Port),
 			Handler:           mux,
 			ReadHeaderTimeout: 10 * time.Second,
 			ReadTimeout:       30 * time.Second,
