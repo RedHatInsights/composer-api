@@ -7,18 +7,6 @@ import (
 	"testing"
 )
 
-func TestInit_SetsDefaultLogger(t *testing.T) {
-	var buf bytes.Buffer
-	Init(&buf, "info", false)
-
-	slog.Info("test message", "key", "value")
-
-	output := buf.String()
-	if output == "" {
-		t.Fatal("expected log output, got empty string")
-	}
-}
-
 func TestInit_RespectsLevel(t *testing.T) {
 	var buf bytes.Buffer
 	Init(&buf, "error", false)

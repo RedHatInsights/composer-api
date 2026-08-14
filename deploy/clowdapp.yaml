@@ -39,6 +39,13 @@ objects:
         replicas: ${{REPLICAS}}
         podSpec:
           image: ${IMAGE}:${IMAGE_TAG}
+          volumes:
+          - name: config
+            configMap:
+              name: composer-api-config
+          volumeMounts:
+          - name: config
+            mountPath: /etc/composer-api
           livenessProbe:
             httpGet:
               path: /ping
@@ -64,3 +71,18 @@ objects:
             limits:
               cpu: ${CPU_LIMIT}
               memory: ${MEMORY_LIMIT}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: composer-api-config
+  data:
+    config.yaml: |
+      server:
+        port: "8080"
+        allowed_origins:
+          - "*"
+        cors_max_age: 3600
+        max_body_bytes: 1048576
+      log:
+        level: "info"
+        pretty: false

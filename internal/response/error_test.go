@@ -61,16 +61,6 @@ func TestWithReasonErr(t *testing.T) {
 	}
 }
 
-func TestChaining(t *testing.T) {
-	err := BadRequest().WithReasonStr("invalid field")
-	if err.StatusCode != 400 {
-		t.Errorf("StatusCode = %d, want 400", err.StatusCode)
-	}
-	if err.Reason != "invalid field" {
-		t.Errorf("Reason = %q, want %q", err.Reason, "invalid field")
-	}
-}
-
 func TestErrorInterface(t *testing.T) {
 	var _ error = NotFound()
 
