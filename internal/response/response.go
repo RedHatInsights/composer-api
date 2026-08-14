@@ -20,11 +20,15 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 		slog.Error("failed to marshal response", "error", err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(`{"error":{"code":500,"message":"internal server error"}}`))
+		if _, err := w.Write([]byte(`{"error":{"code":500,"message":"internal server error"}}`)); err != nil {
+			slog.Error("failed to write error response", "error", err)
+		}
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_, _ = w.Write(data)
+	if _, err := w.Write(data); err != nil {
+		slog.Error("failed to write response", "error", err)
+	}
 }
