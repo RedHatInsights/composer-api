@@ -16,6 +16,7 @@ make clean    # remove bin/ and coverage.out
 
 ```text
 cmd/composer-api/        Entry point, graceful shutdown
+deploy/                  OpenShift/Clowder deployment (clowdapp.yaml, ConfigMap)
 internal/
   config/                Viper-based config with validation (server.port, log.level, log.pretty)
   logger/                slog logger with ContextHandler; JSON (production) or text (pretty mode)
@@ -54,7 +55,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) { ... }
 - Success: `{"body": {...}}`
 - Error: `{"status": "Not Found", "reason": "workspace not found"}`
 - Use typed error factories: `response.NotFound().WithReasonStr("...")`, not raw status codes.
-- `response.WriteError(w, err)` writes the error with the correct HTTP status.
+- `response.WriteError(ctx, w, err)` writes the error with the correct HTTP status.
 
 ### Logging
 - Use `slog.InfoContext`/`slog.ErrorContext` (not `slog.Info`/`slog.Error`) so request_id propagates automatically via ContextHandler.
