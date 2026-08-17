@@ -12,5 +12,5 @@ type HealthAPIResponse struct {
 
 // TODO: expand to check dependencies (database, external services, etc.)
 func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, HealthAPIResponse{Healthy: true})
+	response.WriteJSON(r.Context(), w, http.StatusOK, HealthAPIResponse{Healthy: true})
 }

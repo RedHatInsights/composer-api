@@ -1,6 +1,7 @@
 package response
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -80,7 +81,7 @@ func TestErrorInterface(t *testing.T) {
 func TestToError(t *testing.T) {
 	t.Run("from *Error", func(t *testing.T) {
 		original := NotFound().WithReasonStr("gone")
-		result := ToError(original)
+		result := ToError(context.Background(), original)
 		if result != original {
 			t.Error("expected same pointer")
 		}
@@ -89,14 +90,14 @@ func TestToError(t *testing.T) {
 	t.Run("from wrapped *Error", func(t *testing.T) {
 		original := Forbidden().WithReasonStr("no access")
 		wrapped := fmt.Errorf("wrapped: %w", original)
-		result := ToError(wrapped)
+		result := ToError(context.Background(), wrapped)
 		if result.StatusCode != 403 {
 			t.Errorf("StatusCode = %d, want 403", result.StatusCode)
 		}
 	})
 
 	t.Run("from plain error", func(t *testing.T) {
-		result := ToError(errors.New("something broke"))
+		result := ToError(context.Background(), errors.New("something broke"))
 		if result.StatusCode != 500 {
 			t.Errorf("StatusCode = %d, want 500", result.StatusCode)
 		}
@@ -106,7 +107,7 @@ func TestToError(t *testing.T) {
 	})
 
 	t.Run("from string", func(t *testing.T) {
-		result := ToError("bad thing")
+		result := ToError(context.Background(), "bad thing")
 		if result.StatusCode != 500 {
 			t.Errorf("StatusCode = %d, want 500", result.StatusCode)
 		}
@@ -116,7 +117,7 @@ func TestToError(t *testing.T) {
 	})
 
 	t.Run("from other type", func(t *testing.T) {
-		result := ToError(42)
+		result := ToError(context.Background(), 42)
 		if result.StatusCode != 500 {
 			t.Errorf("StatusCode = %d, want 500", result.StatusCode)
 		}
@@ -128,7 +129,7 @@ func TestToError(t *testing.T) {
 
 func TestWriteError(t *testing.T) {
 	w := httptest.NewRecorder()
-	WriteError(w, NotFound().WithReasonStr("workspace not found"))
+	WriteError(context.Background(), w, NotFound().WithReasonStr("workspace not found"))
 
 	if w.Code != 404 {
 		t.Errorf("status code = %d, want 404", w.Code)

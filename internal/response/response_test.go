@@ -1,16 +1,17 @@
 package response
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestJSON(t *testing.T) {
+func TestWriteJSON(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	JSON(rec, http.StatusOK, map[string]string{"key": "value"})
+	WriteJSON(context.Background(), rec, http.StatusOK, map[string]string{"key": "value"})
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
@@ -35,20 +36,20 @@ func TestJSON(t *testing.T) {
 	}
 }
 
-func TestJSON_CustomStatus(t *testing.T) {
+func TestWriteJSON_CustomStatus(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	JSON(rec, http.StatusNotFound, map[string]string{"error": "not found"})
+	WriteJSON(context.Background(), rec, http.StatusNotFound, map[string]string{"error": "not found"})
 
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("expected status %d, got %d", http.StatusNotFound, rec.Code)
 	}
 }
 
-func TestJSON_NilBody(t *testing.T) {
+func TestWriteJSON_NilBody(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	JSON(rec, http.StatusOK, nil)
+	WriteJSON(context.Background(), rec, http.StatusOK, nil)
 
 	var resp Response
 	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {

@@ -44,7 +44,9 @@ image:
 container:
 	@echo "+$@"
 	@echo "############### Removing old container ################"
-	@$(DOCKER) rm -f $(APPLICATION_NAME)
+	@if container_id=$$($(DOCKER) ps -aq -f "name=^$(APPLICATION_NAME)$$"); then \
+		test -z "$$container_id" || $(DOCKER) rm -f "$$container_id"; \
+	fi
 	@echo "################ Running new container ################"
 	@$(DOCKER) run --name $(APPLICATION_NAME) --detach --publish 8080:8080 \
 		$(APPLICATION_NAME):latest

@@ -28,7 +28,7 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) {
 	probeMux.HandleFunc("GET /ping", probeHandler.Ping)
 	probeMux.HandleFunc("GET /health", probeHandler.Health)
 	probeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(w, response.NotFound().WithReasonStr("route not found"))
+		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
 	})
 	mux.Handle("/", middleware.Recover(probeMux))
 

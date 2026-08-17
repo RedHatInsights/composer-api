@@ -1,6 +1,7 @@
 package response
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -48,7 +49,7 @@ func TooManyRequests() *Error    { return NewError(http.StatusTooManyRequests) }
 func InternalServerError() *Error { return NewError(http.StatusInternalServerError) }
 func ServiceUnavailable() *Error { return NewError(http.StatusServiceUnavailable) }
 
-func ToError(v any) *Error {
+func ToError(ctx context.Context, v any) *Error {
 	switch val := v.(type) {
 	case *Error:
 		return val
@@ -57,17 +58,17 @@ func ToError(v any) *Error {
 		if errors.As(val, &httpErr) {
 			return httpErr
 		}
-		slog.Error("internal error", "error", val)
+		slog.ErrorContext(ctx, "internal error", "error", val)
 		return InternalServerError()
 	case string:
-		slog.Error("internal error", "error", val)
+		slog.ErrorContext(ctx, "internal error", "error", val)
 		return InternalServerError()
 	default:
-		slog.Error("internal error", "error", fmt.Sprintf("%v", val))
+		slog.ErrorContext(ctx, "internal error", "error", fmt.Sprintf("%v", val))
 		return InternalServerError()
 	}
 }
 
-func WriteError(w http.ResponseWriter, err *Error) {
-	writeJSON(w, err.StatusCode, err)
+func WriteError(ctx context.Context, w http.ResponseWriter, err *Error) {
+	encodeJSON(ctx, w, err.StatusCode, err)
 }

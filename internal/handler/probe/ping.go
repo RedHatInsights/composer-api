@@ -11,5 +11,5 @@ type PingAPIResponse struct {
 }
 
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, PingAPIResponse{Ping: "pong"})
+	response.WriteJSON(r.Context(), w, http.StatusOK, PingAPIResponse{Ping: "pong"})
 }

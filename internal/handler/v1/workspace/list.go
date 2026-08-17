@@ -12,5 +12,5 @@ type ListAPIResponse struct {
 
 // TODO: stub — returns an empty list; implementation pending.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, ListAPIResponse{Workspaces: []any{}})
+	response.WriteJSON(r.Context(), w, http.StatusOK, ListAPIResponse{Workspaces: []any{}})
 }
