@@ -1,3 +1,5 @@
 .git
 .gitignore
 readme.md
+config.yaml
+configs/config.yaml

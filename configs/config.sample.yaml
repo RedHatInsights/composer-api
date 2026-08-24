@@ -1,0 +1,18 @@
+# Composer API configuration
+# Values are loaded from this file. Copy config.sample.yaml to config.yaml to get started.
+
+server:
+  port: "8080"
+  # Origins allowed for CORS requests. Use ["*"] to allow all.
+  allowed_origins:
+    - "*"
+  # Max age (seconds) browsers cache preflight responses.
+  cors_max_age: 3600
+  # Maximum request body size in bytes (default: 1MB).
+  max_body_bytes: 1048576
+
+log:
+  # Supported levels: debug, info, warn, error
+  level: "info"
+  # Set to true for human-readable log output during local development.
+  pretty: false
