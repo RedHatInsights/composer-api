@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"slices"
 
@@ -42,7 +43,7 @@ func (c DatabaseConfig) DSN() string {
 	u := url.URL{
 		Scheme:   "postgres",
 		User:     url.UserPassword(c.User, c.Password),
-		Host:     fmt.Sprintf("%s:%s", c.Host, c.Port),
+		Host:     net.JoinHostPort(c.Host, c.Port),
 		Path:     c.Name,
 		RawQuery: fmt.Sprintf("sslmode=%s", c.SSLMode),
 	}
