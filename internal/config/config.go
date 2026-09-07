@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"slices"
 
 	"github.com/spf13/viper"
@@ -10,10 +11,10 @@ import (
 var validLogLevels = []string{"debug", "info", "warn", "error"}
 
 // Config holds all application configuration.
-// Add new fields here as the application grows.
 type Config struct {
-	Server ServerConfig `mapstructure:"server"`
-	Log    LogConfig    `mapstructure:"log"`
+	Server   ServerConfig   `mapstructure:"server"`
+	Log      LogConfig      `mapstructure:"log"`
+	Database DatabaseConfig `mapstructure:"database"`
 }
 
 type ServerConfig struct {
@@ -28,6 +29,26 @@ type LogConfig struct {
 	Pretty bool   `mapstructure:"pretty"`
 }
 
+type DatabaseConfig struct {
+	Host    string `mapstructure:"host"`
+	Port    string `mapstructure:"port"`
+	Name    string `mapstructure:"name"`
+	User    string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	SSLMode string `mapstructure:"ssl_mode"`
+}
+
+func (c DatabaseConfig) DSN() string {
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(c.User, c.Password),
+		Host:     fmt.Sprintf("%s:%s", c.Host, c.Port),
+		Path:     c.Name,
+		RawQuery: fmt.Sprintf("sslmode=%s", c.SSLMode),
+	}
+	return u.String()
+}
+
 // Load reads configuration from a config.yaml file.
 // It searches in the current directory, configs/, and /etc/composer-api/.
 func Load() (Config, error) {
@@ -39,6 +60,12 @@ func Load() (Config, error) {
 	v.SetDefault("server.max_body_bytes", 1048576)
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.pretty", false)
+	v.SetDefault("database.host", "localhost")
+	v.SetDefault("database.port", "5432")
+	v.SetDefault("database.name", "composer")
+	v.SetDefault("database.user", "composer")
+	v.SetDefault("database.password", "")
+	v.SetDefault("database.ssl_mode", "disable")
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")

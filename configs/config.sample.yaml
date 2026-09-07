@@ -11,6 +11,14 @@ server:
   # Maximum request body size in bytes (default: 1MB).
   max_body_bytes: 1048576
 
+database:
+  host: "localhost"
+  port: "5432"
+  name: "composer"
+  user: "composer"
+  password: "composer"
+  ssl_mode: "disable"
+
 log:
   # Supported levels: debug, info, warn, error
   level: "info"
