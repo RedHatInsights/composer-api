@@ -10,6 +10,11 @@ make run      # tidy + build + run
 make image    # build container image (auto-detects podman/docker)
 make container # run container on port 8080
 make clean    # remove bin/ and coverage.out
+
+# Migrations (requires golang-migrate CLI)
+make migrate-create name=<name>  # create new migration file pair
+make migrate-up                  # run all pending migrations (needs DATABASE_URL)
+make migrate-down                # rollback last migration (needs DATABASE_URL)
 ```
 
 ## Project Structure
@@ -18,7 +23,9 @@ make clean    # remove bin/ and coverage.out
 cmd/composer-api/        Entry point, graceful shutdown
 deploy/                  OpenShift/Clowder deployment (clowdapp.yaml, ConfigMap)
 internal/
-  config/                Viper-based config with validation (server.port, log.level, log.pretty)
+  config/                Viper-based config with validation (server, log, database)
+  database/              DB connection and migration runner (golang-migrate, embedded SQL)
+    migrations/          Sequentially numbered .up.sql / .down.sql files
   logger/                slog logger with ContextHandler; JSON (production) or text (pretty mode)
   middleware/            One file per middleware (requestid, logging, recover, chain, cors, bodysize)
   handler/
