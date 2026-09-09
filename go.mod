@@ -1,9 +1,10 @@
 module github.com/RedHatInsights/composer-api
 
-go 1.25.0
+go 1.25.11
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/redhatinsights/app-common-go v1.6.9
 	github.com/spf13/viper v1.21.0
 )
 
