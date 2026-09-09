@@ -66,7 +66,7 @@ func Load() (Config, error) {
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.pretty", false)
 
-	if clowderCfg != nil && clowderCfg.Database != nil {
+	if clowder.IsClowderEnabled() {
 		v.SetDefault("database.host", clowderCfg.Database.Hostname)
 		v.SetDefault("database.port", clowderCfg.Database.Port)
 		v.SetDefault("database.user", clowderCfg.Database.Username)
