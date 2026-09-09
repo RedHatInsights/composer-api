@@ -7,6 +7,8 @@ import (
 	"slices"
 
 	"github.com/spf13/viper"
+
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
 
 var validLogLevels = []string{"debug", "info", "warn", "error"}
@@ -31,12 +33,12 @@ type LogConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host    string `mapstructure:"host"`
-	Port    string `mapstructure:"port"`
-	Name    string `mapstructure:"name"`
-	User    string `mapstructure:"user"`
+	Host     string `mapstructure:"host"`
+	Port     string `mapstructure:"port"`
+	Name     string `mapstructure:"name"`
+	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
-	SSLMode string `mapstructure:"ssl_mode"`
+	SSLMode  string `mapstructure:"ssl_mode"`
 }
 
 func (c DatabaseConfig) DSN() string {
@@ -54,19 +56,24 @@ func (c DatabaseConfig) DSN() string {
 // It searches in the current directory, configs/, and /etc/composer-api/.
 func Load() (Config, error) {
 	v := viper.New()
+	clowderCfg := clowder.LoadedConfig
 
 	v.SetDefault("server.port", "8080")
 	v.SetDefault("server.allowed_origins", []string{"*"})
 	v.SetDefault("server.cors_max_age", 3600)
 	v.SetDefault("server.max_body_bytes", 1048576)
+
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.pretty", false)
-	v.SetDefault("database.host", "localhost")
-	v.SetDefault("database.port", "5432")
-	v.SetDefault("database.name", "composer")
-	v.SetDefault("database.user", "composer")
-	v.SetDefault("database.password", "")
-	v.SetDefault("database.ssl_mode", "disable")
+
+	if clowderCfg != nil && clowderCfg.Database != nil {
+		v.SetDefault("database.host", clowderCfg.Database.Hostname)
+		v.SetDefault("database.port", clowderCfg.Database.Port)
+		v.SetDefault("database.user", clowderCfg.Database.Username)
+		v.SetDefault("database.password", clowderCfg.Database.Password)
+		v.SetDefault("database.name", clowderCfg.Database.Name)
+		v.SetDefault("database.ssl_mode", clowderCfg.Database.SslMode)
+	}
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
