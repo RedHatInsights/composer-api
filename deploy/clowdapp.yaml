@@ -43,6 +43,19 @@ objects:
         replicas: ${{REPLICAS}}
         podSpec:
           image: ${IMAGE}:${IMAGE_TAG}
+          initContainers:
+            - name: run-migrations
+              inheritEnv: true
+              command:
+                - /bin/bash
+                - /migrate.sh
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
           volumes:
           - name: config
             configMap:
