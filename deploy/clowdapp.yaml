@@ -29,8 +29,6 @@ objects:
   kind: ClowdApp
   metadata:
     name: composer-api
-    labels:
-      app: rhsm-api-proxy
   spec:
     envName: ${ENV_NAME}
 

@@ -10,7 +10,7 @@ metadata:
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
       == "main"
   labels:
-    appstudio.openshift.io/application: rhsm-api-proxy
+    appstudio.openshift.io/application: composer-api
     appstudio.openshift.io/component: composer-api
     pipelines.appstudio.openshift.io/type: build
   name: composer-api-on-push
