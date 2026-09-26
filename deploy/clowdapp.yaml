@@ -34,11 +34,29 @@ objects:
   spec:
     envName: ${ENV_NAME}
 
+    database:
+      name: composer
+      version: 16
+
     deployments:
       - name: service
         replicas: ${{REPLICAS}}
         podSpec:
           image: ${IMAGE}:${IMAGE_TAG}
+          initContainers:
+            - name: run-migrations
+              image: ${IMAGE}:${IMAGE_TAG}
+              inheritEnv: true
+              command:
+                - /bin/bash
+                - /migrate.sh
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
           volumes:
           - name: config
             configMap:

@@ -2,18 +2,22 @@ package config
 
 import (
 	"fmt"
+	"net"
+	"net/url"
 	"slices"
 
 	"github.com/spf13/viper"
+
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 )
 
 var validLogLevels = []string{"debug", "info", "warn", "error"}
 
 // Config holds all application configuration.
-// Add new fields here as the application grows.
 type Config struct {
-	Server ServerConfig `mapstructure:"server"`
-	Log    LogConfig    `mapstructure:"log"`
+	Server   ServerConfig   `mapstructure:"server"`
+	Log      LogConfig      `mapstructure:"log"`
+	Database DatabaseConfig `mapstructure:"database"`
 }
 
 type ServerConfig struct {
@@ -28,17 +32,48 @@ type LogConfig struct {
 	Pretty bool   `mapstructure:"pretty"`
 }
 
+type DatabaseConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     string `mapstructure:"port"`
+	Name     string `mapstructure:"name"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	SSLMode  string `mapstructure:"ssl_mode"`
+}
+
+func (c DatabaseConfig) DSN() string {
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(c.User, c.Password),
+		Host:     net.JoinHostPort(c.Host, c.Port),
+		Path:     c.Name,
+		RawQuery: fmt.Sprintf("sslmode=%s", c.SSLMode),
+	}
+	return u.String()
+}
+
 // Load reads configuration from a config.yaml file.
 // It searches in the current directory, configs/, and /etc/composer-api/.
 func Load() (Config, error) {
 	v := viper.New()
+	clowderCfg := clowder.LoadedConfig
 
 	v.SetDefault("server.port", "8080")
 	v.SetDefault("server.allowed_origins", []string{"*"})
 	v.SetDefault("server.cors_max_age", 3600)
 	v.SetDefault("server.max_body_bytes", 1048576)
+
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.pretty", false)
+
+	if clowder.IsClowderEnabled() {
+		v.SetDefault("database.host", clowderCfg.Database.Hostname)
+		v.SetDefault("database.port", clowderCfg.Database.Port)
+		v.SetDefault("database.user", clowderCfg.Database.Username)
+		v.SetDefault("database.password", clowderCfg.Database.Password)
+		v.SetDefault("database.name", clowderCfg.Database.Name)
+		v.SetDefault("database.ssl_mode", clowderCfg.Database.SslMode)
+	}
 
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
