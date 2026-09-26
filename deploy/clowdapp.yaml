@@ -36,7 +36,7 @@ objects:
 
     database:
       name: composer
-      version: 18
+      version: 16
 
     deployments:
       - name: service
@@ -45,6 +45,7 @@ objects:
           image: ${IMAGE}:${IMAGE_TAG}
           initContainers:
             - name: run-migrations
+              image: ${IMAGE}:${IMAGE_TAG}
               inheritEnv: true
               command:
                 - /bin/bash
