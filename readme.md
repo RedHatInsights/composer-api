@@ -5,15 +5,29 @@ A set of APIs to allow users to manage their available features on their workspa
 ## Prerequisites
 
 - Go 1.22+
+- PostgreSQL 18+
 - [golang-migrate CLI](https://github.com/golang-migrate/migrate) (for running migrations locally)
 - [golangci-lint](https://golangci-lint.run/) (for linting)
-- Podman or Docker (for container builds)
+- Podman or Docker (for container builds and local PostgreSQL)
 
 ## Getting Started
 
 ```bash
+# Start a local PostgreSQL instance
+podman run --name composer-db -d \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=composer \
+  -p 5432:5432 \
+  postgres:18
+
+# Set up config and run migrations
 cp configs/config.sample.yaml configs/config.yaml  # adjust values as needed
-make run                                            # tidy, build, and start the server
+export DATABASE_URL="postgres://postgres:postgres@localhost:5432/composer?sslmode=disable"
+make migrate-up
+
+# Build and start the server
+make run
 ```
 
 The server listens on port `8000` by default.

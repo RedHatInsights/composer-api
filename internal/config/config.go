@@ -52,12 +52,16 @@ func (c DatabaseConfig) DSN() string {
 	return u.String()
 }
 
-// Load reads configuration from a config.yaml file.
-// It searches in the current directory, configs/, and /etc/composer-api/.
+// Load builds the application Config by merging three sources (highest precedence wins):
+//  1. Clowder (cdappconfig.json) — when running on Clowder, the web provider's PublicPort and
+//     database credentials are injected via v.Set() so they always override file values.
+//  2. Config file (config.yaml) — searched in ".", "configs/", and "/etc/composer-api/".
+//  3. Built-in defaults — fallback values used for local development when no file is present.
 func Load() (Config, error) {
 	v := viper.New()
 	clowderCfg := clowder.LoadedConfig
 
+	// Fallback defaults for local development (lowest precedence).
 	v.SetDefault("server.port", "8000")
 	v.SetDefault("server.allowed_origins", []string{"*"})
 	v.SetDefault("server.cors_max_age", 3600)
@@ -66,6 +70,10 @@ func Load() (Config, error) {
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.pretty", false)
 
+	// When deployed on Clowder, override port and database from cdappconfig.json.
+	// v.Set() is used instead of v.SetDefault() so these values take precedence
+	// over anything in the config file, ensuring the app binds to the port that
+	// Clowder's web provider assigns and connects to the provisioned database.
 	if clowder.IsClowderEnabled() {
 		if clowderCfg.PublicPort != nil {
 			v.Set("server.port", fmt.Sprintf("%d", *clowderCfg.PublicPort))
@@ -79,6 +87,7 @@ func Load() (Config, error) {
 		v.Set("database.ssl_mode", clowderCfg.Database.SslMode)
 	}
 
+	// Look for config.yaml in standard paths.
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
 	v.AddConfigPath(".")
@@ -92,6 +101,7 @@ func Load() (Config, error) {
 		}
 	}
 
+	// Unmarshal the merged config into the Config struct and validate.
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
 		return Config{}, err
