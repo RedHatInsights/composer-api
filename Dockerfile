@@ -30,7 +30,7 @@ COPY --from=builder /app/composer-api .
 COPY internal/database/migrations/ /migrations/
 COPY deploy/migrate.sh /migrate.sh
 
-EXPOSE 8080
+EXPOSE 8000
 
 USER 1001
 

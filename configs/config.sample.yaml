@@ -2,7 +2,7 @@
 # Values are loaded from this file. Copy config.sample.yaml to config.yaml to get started.
 
 server:
-  port: "8080"
+  port: "8000"
   # Origins allowed for CORS requests. Use ["*"] to allow all.
   allowed_origins:
     - "*"

@@ -58,7 +58,7 @@ func Load() (Config, error) {
 	v := viper.New()
 	clowderCfg := clowder.LoadedConfig
 
-	v.SetDefault("server.port", "8080")
+	v.SetDefault("server.port", "8000")
 	v.SetDefault("server.allowed_origins", []string{"*"})
 	v.SetDefault("server.cors_max_age", 3600)
 	v.SetDefault("server.max_body_bytes", 1048576)
@@ -67,12 +67,16 @@ func Load() (Config, error) {
 	v.SetDefault("log.pretty", false)
 
 	if clowder.IsClowderEnabled() {
-		v.SetDefault("database.host", clowderCfg.Database.Hostname)
-		v.SetDefault("database.port", clowderCfg.Database.Port)
-		v.SetDefault("database.user", clowderCfg.Database.Username)
-		v.SetDefault("database.password", clowderCfg.Database.Password)
-		v.SetDefault("database.name", clowderCfg.Database.Name)
-		v.SetDefault("database.ssl_mode", clowderCfg.Database.SslMode)
+		if clowderCfg.PublicPort != nil {
+			v.Set("server.port", fmt.Sprintf("%d", *clowderCfg.PublicPort))
+		}
+
+		v.Set("database.host", clowderCfg.Database.Hostname)
+		v.Set("database.port", clowderCfg.Database.Port)
+		v.Set("database.user", clowderCfg.Database.Username)
+		v.Set("database.password", clowderCfg.Database.Password)
+		v.Set("database.name", clowderCfg.Database.Name)
+		v.Set("database.ssl_mode", clowderCfg.Database.SslMode)
 	}
 
 	v.SetConfigName("config")

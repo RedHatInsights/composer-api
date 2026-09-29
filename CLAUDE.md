@@ -8,7 +8,7 @@ make test     # run tests with -race and coverage
 make lint     # golangci-lint
 make run      # tidy + build + run
 make image    # build container image (auto-detects podman/docker)
-make container # run container on port 8080
+make container # run container on port 8000
 make clean    # remove bin/ and coverage.out
 
 # Migrations (requires golang-migrate CLI)

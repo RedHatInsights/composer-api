@@ -50,7 +50,7 @@ container:
 		test -z "$$container_id" || $(DOCKER) rm -f "$$container_id"; \
 	fi
 	@echo "################ Running new container ################"
-	@$(DOCKER) run --name $(APPLICATION_NAME) --detach --publish 8080:8080 \
+	@$(DOCKER) run --name $(APPLICATION_NAME) --detach --publish 8000:8000 \
 		$(APPLICATION_NAME):latest
 
 # Creates a new migration file pair. Usage: make migrate-create name=<migration_name>

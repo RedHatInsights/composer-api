@@ -16,7 +16,7 @@ cp configs/config.sample.yaml configs/config.yaml  # adjust values as needed
 make run                                            # tidy, build, and start the server
 ```
 
-The server listens on port `8080` by default.
+The server listens on port `8000` by default.
 
 ## Build & Run
 
@@ -26,7 +26,7 @@ make run      # tidy + build + run
 make test     # run tests with -race and coverage
 make lint     # golangci-lint
 make image    # build container image (auto-detects podman/docker)
-make container # run container on port 8080
+make container # run container on port 8000
 make clean    # remove bin/ and coverage.out
 ```
 
@@ -52,7 +52,7 @@ In Clowder deployments, migrations run automatically via an init container befor
 
 Configuration is loaded via [Viper](https://github.com/spf13/viper) in the following order of precedence:
 
-1. Clowder config (when deployed on Clowder, database settings are auto-populated)
+1. Clowder config (when deployed on Clowder, port and database settings are auto-populated and override file config)
 2. `config.yaml` file (searched in `.`, `configs/`, `/etc/composer-api/`)
 3. Built-in defaults
 
