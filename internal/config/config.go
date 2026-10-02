@@ -132,5 +132,20 @@ func validate(cfg Config) error {
 	if !slices.Contains(validLogLevels, cfg.Log.Level) {
 		return fmt.Errorf("log.level must be one of %v, got %q", validLogLevels, cfg.Log.Level)
 	}
+	if cfg.Database.Host == "" {
+		return fmt.Errorf("database.host must not be empty")
+	}
+	if cfg.Database.Port == "" {
+		return fmt.Errorf("database.port must not be empty")
+	}
+	if cfg.Database.Name == "" {
+		return fmt.Errorf("database.name must not be empty")
+	}
+	if cfg.Database.User == "" {
+		return fmt.Errorf("database.user must not be empty")
+	}
+	if cfg.Database.Password == "" {
+		return fmt.Errorf("database.password must not be empty")
+	}
 	return nil
 }
