@@ -79,12 +79,14 @@ func Load() (Config, error) {
 			v.Set("server.port", fmt.Sprintf("%d", *clowderCfg.PublicPort))
 		}
 
-		v.Set("database.host", clowderCfg.Database.Hostname)
-		v.Set("database.port", clowderCfg.Database.Port)
-		v.Set("database.user", clowderCfg.Database.Username)
-		v.Set("database.password", clowderCfg.Database.Password)
-		v.Set("database.name", clowderCfg.Database.Name)
-		v.Set("database.ssl_mode", clowderCfg.Database.SslMode)
+		if db := clowderCfg.Database; db != nil {
+			v.Set("database.host", db.Hostname)
+			v.Set("database.port", fmt.Sprintf("%d", db.Port))
+			v.Set("database.user", db.Username)
+			v.Set("database.password", db.Password)
+			v.Set("database.name", db.Name)
+			v.Set("database.ssl_mode", db.SslMode)
+		}
 	}
 
 	// Look for config.yaml in standard paths.

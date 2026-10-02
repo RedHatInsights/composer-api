@@ -15,7 +15,18 @@ DB_USER=$(jq -r '.database.username' "$ACG_CONFIG")
 DB_PASS=$(jq -r '.database.password' "$ACG_CONFIG")
 DB_SSLMODE=$(jq -r '.database.sslMode // "disable"' "$ACG_CONFIG")
 
-DATABASE_URL="postgres://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}"
+for var in DB_HOST DB_PORT DB_NAME DB_USER DB_PASS; do
+  val="${!var}"
+  if [[ -z "$val" || "$val" == "null" ]]; then
+    echo "ERROR: Required config value $var is not set in $ACG_CONFIG"
+    exit 1
+  fi
+done
+
+ENCODED_USER=$(printf '%s' "$DB_USER" | jq -Rr @uri)
+ENCODED_PASS=$(printf '%s' "$DB_PASS" | jq -Rr @uri)
+
+DATABASE_URL="postgres://${ENCODED_USER}:${ENCODED_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}"
 
 echo "Running database migrations..."
 migrate -path /migrations -database "$DATABASE_URL" up
