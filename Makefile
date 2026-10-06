@@ -6,7 +6,9 @@ APPLICATION_BINARY_NAME = composer-api
 # Support both podman and docker.
 DOCKER=$(shell which podman || which docker || echo 'docker')
 
-.PHONY: build run test tidy lint image container clean
+MIGRATIONS_DIR = internal/database/migrations
+
+.PHONY: build run test tidy lint image container clean migrate-create migrate-up migrate-down
 
 # Builds the project.
 build:
@@ -48,8 +50,23 @@ container:
 		test -z "$$container_id" || $(DOCKER) rm -f "$$container_id"; \
 	fi
 	@echo "################ Running new container ################"
-	@$(DOCKER) run --name $(APPLICATION_NAME) --detach --publish 8080:8080 \
+	@$(DOCKER) run --name $(APPLICATION_NAME) --detach --publish 8000:8000 \
 		$(APPLICATION_NAME):latest
+
+# Creates a new migration file pair. Usage: make migrate-create name=<migration_name>
+migrate-create:
+	@echo "+$@"
+	@migrate create -ext sql -dir $(MIGRATIONS_DIR) -seq $(name)
+
+# Runs all pending migrations. Requires DATABASE_URL env var.
+migrate-up:
+	@echo "+$@"
+	@migrate -path $(MIGRATIONS_DIR) -database "$$DATABASE_URL" up
+
+# Rolls back the last migration. Requires DATABASE_URL env var.
+migrate-down:
+	@echo "+$@"
+	@migrate -path $(MIGRATIONS_DIR) -database "$$DATABASE_URL" down 1
 
 # Removes build artifacts.
 clean:

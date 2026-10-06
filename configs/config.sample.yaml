@@ -2,7 +2,7 @@
 # Values are loaded from this file. Copy config.sample.yaml to config.yaml to get started.
 
 server:
-  port: "8080"
+  port: "8000"
   # Origins allowed for CORS requests. Use ["*"] to allow all.
   allowed_origins:
     - "*"
@@ -16,3 +16,13 @@ log:
   level: "info"
   # Set to true for human-readable log output during local development.
   pretty: false
+
+# Database connection settings for local development.
+# When deployed on Clowder, these are overridden by cdappconfig.json.
+database:
+  host: "localhost"
+  port: "5432"
+  name: "composer"
+  user: "postgres"
+  password: "postgres"
+  ssl_mode: "disable"
