@@ -22,8 +22,6 @@ parameters:
     value: 100m
   - name: CPU_LIMIT
     value: 500m
-  - name: PORT
-    value: '8080'
 objects:
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
@@ -33,12 +31,31 @@ objects:
       app: composer-api
   spec:
     envName: ${ENV_NAME}
-
+    database:
+      name: composer
+      version: 16
     deployments:
       - name: service
+        webServices:
+          public:
+            enabled: true
+            apiPath: composer
         replicas: ${{REPLICAS}}
         podSpec:
           image: ${IMAGE}:${IMAGE_TAG}
+          initContainers:
+            - name: run-migrations
+              inheritEnv: true
+              command:
+                - /bin/bash
+                - /migrate.sh
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
           volumes:
           - name: config
             configMap:
@@ -49,7 +66,7 @@ objects:
           livenessProbe:
             httpGet:
               path: /ping
-              port: ${{PORT}}
+              port: web
             failureThreshold: 3
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -58,7 +75,7 @@ objects:
           readinessProbe:
             httpGet:
               path: /health
-              port: ${{PORT}}
+              port: web
             failureThreshold: 3
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -78,7 +95,7 @@ objects:
   data:
     config.yaml: |
       server:
-        port: "8080"
+        port: "8000"
         allowed_origins:
           - "*"
         cors_max_age: 3600
