@@ -69,16 +69,16 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 //	wsMiddleware := middleware.Chain(commonMiddleware, middleware.Auth, middleware.RBAC)(wsMux)
 func registerV1Routes(mux *http.ServeMux, commonMiddleware func(http.Handler) http.Handler) {
 	v1Mux := http.NewServeMux()
-	wsMux := http.NewServeMux()
+	v1Mux.Handle("/", commonMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
+	})))
 
 	wsHandler := workspace.New()
+	wsMux := http.NewServeMux()
 	wsMux.HandleFunc("GET /", wsHandler.List)
 	wsMiddleware := commonMiddleware(wsMux)
 
 	mountResource(v1Mux, "/workspaces", wsMiddleware)
 	mountResource(mux, "/v1", v1Mux)
 
-	v1Mux.Handle("/", commonMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
-	})))
 }
