@@ -10,9 +10,24 @@ import (
 	"github.com/RedHatInsights/composer-api/internal/response"
 )
 
+// mountResource registers h under prefix on mux using http.StripPrefix.
+// It also registers the bare prefix (without trailing slash) to prevent
+// Go's ServeMux from issuing a broken redirect after StripPrefix.
+func mountResource(mux *http.ServeMux, prefix string, h http.Handler) {
+	mux.Handle(prefix+"/", http.StripPrefix(prefix, h))
+	mux.HandleFunc(prefix, func(w http.ResponseWriter, r *http.Request) {
+		r2 := r.Clone(r.Context())
+		r2.URL.Path = "/"
+		r2.URL.RawPath = ""
+		h.ServeHTTP(w, r2)
+	})
+}
+
 // registerRoutes registers probe routes for liveness/readiness checks
 // and delegates versioned route groups to their own registration functions.
-func registerRoutes(mux *http.ServeMux, cfg config.Config) {
+// It returns the top-level handler wrapped with TrailingSlash so that
+// paths with and without a trailing slash are handled consistently.
+func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 	commonMiddleware := middleware.Chain(
 		middleware.Recover,
 		middleware.CORS(cfg.Server.AllowedOrigins, cfg.Server.CORSMaxAge),
@@ -21,8 +36,6 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) {
 		middleware.BodySizeLimit(cfg.Server.MaxBodyBytes),
 	)
 
-	// Probe routes — wrapped with Recover so panics in dependency
-	// checks (future health expansions) don't crash the process.
 	probeHandler := probe.New()
 	probeMux := http.NewServeMux()
 	probeMux.HandleFunc("GET /ping", probeHandler.Ping)
@@ -30,10 +43,12 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) {
 	probeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
 	})
-	mux.Handle("/", middleware.Recover(probeMux))
+	mux.Handle("/", commonMiddleware(probeMux))
 
 	// v1 Routes
 	registerV1Routes(mux, commonMiddleware)
+
+	return middleware.TrailingSlash(mux)
 }
 
 // registerV1Routes creates a sub-mux per resource, wraps each with its
@@ -46,22 +61,24 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) {
 //	fMux := http.NewServeMux()
 //	fMux.HandleFunc("GET /", fHandler.List)
 //	fMiddleware := commonMiddleware(fMux)
-//	v1Mux.Handle("/features/", http.StripPrefix("/features", fMiddleware))
+//	mountResource(v1Mux, "/features", fMiddleware)
 //
 // To add resource-specific middleware, replace commonMiddleware with
 // a custom chain, e.g.:
 //
 //	wsMiddleware := middleware.Chain(commonMiddleware, middleware.Auth, middleware.RBAC)(wsMux)
 func registerV1Routes(mux *http.ServeMux, commonMiddleware func(http.Handler) http.Handler) {
+	v1Mux := http.NewServeMux()
+	wsMux := http.NewServeMux()
 
 	wsHandler := workspace.New()
-
-	wsMux := http.NewServeMux()
 	wsMux.HandleFunc("GET /", wsHandler.List)
 	wsMiddleware := commonMiddleware(wsMux)
 
-	v1Mux := http.NewServeMux()
-	v1Mux.Handle("/workspaces/", http.StripPrefix("/workspaces", wsMiddleware))
+	mountResource(v1Mux, "/workspaces", wsMiddleware)
+	mountResource(mux, "/v1", v1Mux)
 
-	mux.Handle("/v1/", http.StripPrefix("/v1", v1Mux))
+	v1Mux.Handle("/", commonMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
+	})))
 }
