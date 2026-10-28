@@ -44,16 +44,17 @@ type DatabaseConfig struct {
 }
 
 func (c DatabaseConfig) DSN() string {
-	q := fmt.Sprintf("sslmode=%s", c.SSLMode)
+	q := url.Values{}
+	q.Set("sslmode", c.SSLMode)
 	if c.CACertPath != "" {
-		q += fmt.Sprintf("&sslrootcert=%s", c.CACertPath)
+		q.Set("sslrootcert", c.CACertPath)
 	}
 	u := url.URL{
 		Scheme:   "postgres",
 		User:     url.UserPassword(c.User, c.Password),
 		Host:     net.JoinHostPort(c.Host, c.Port),
 		Path:     c.Name,
-		RawQuery: q,
+		RawQuery: q.Encode(),
 	}
 	return u.String()
 }

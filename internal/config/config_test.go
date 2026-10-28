@@ -154,7 +154,12 @@ func TestDatabaseConfig_DSN(t *testing.T) {
 		{
 			"with CA cert path",
 			DatabaseConfig{Host: "db.host", Port: "5432", Name: "app", User: "admin", Password: "pass", SSLMode: "verify-full", CACertPath: "/tmp/db-ca.crt"},
-			"postgres://admin:pass@db.host:5432/app?sslmode=verify-full&sslrootcert=/tmp/db-ca.crt",
+			"postgres://admin:pass@db.host:5432/app?sslmode=verify-full&sslrootcert=%2Ftmp%2Fdb-ca.crt",
+		},
+		{
+			"CA cert path with special characters",
+			DatabaseConfig{Host: "db.host", Port: "5432", Name: "app", User: "admin", Password: "pass", SSLMode: "verify-full", CACertPath: "/tmp/path+with&special"},
+			"postgres://admin:pass@db.host:5432/app?sslmode=verify-full&sslrootcert=%2Ftmp%2Fpath%2Bwith%26special",
 		},
 	}
 
