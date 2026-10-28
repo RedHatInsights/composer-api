@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"slices"
 
 	"github.com/spf13/viper"
@@ -33,21 +34,26 @@ type LogConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     string `mapstructure:"port"`
-	Name     string `mapstructure:"name"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	SSLMode  string `mapstructure:"ssl_mode"`
+	Host       string `mapstructure:"host"`
+	Port       string `mapstructure:"port"`
+	Name       string `mapstructure:"name"`
+	User       string `mapstructure:"user"`
+	Password   string `mapstructure:"password"`
+	SSLMode    string `mapstructure:"ssl_mode"`
+	CACertPath string `mapstructure:"ca_cert_path"`
 }
 
 func (c DatabaseConfig) DSN() string {
+	q := fmt.Sprintf("sslmode=%s", c.SSLMode)
+	if c.CACertPath != "" {
+		q += fmt.Sprintf("&sslrootcert=%s", c.CACertPath)
+	}
 	u := url.URL{
 		Scheme:   "postgres",
 		User:     url.UserPassword(c.User, c.Password),
 		Host:     net.JoinHostPort(c.Host, c.Port),
 		Path:     c.Name,
-		RawQuery: fmt.Sprintf("sslmode=%s", c.SSLMode),
+		RawQuery: q,
 	}
 	return u.String()
 }
@@ -86,6 +92,14 @@ func Load() (Config, error) {
 			v.Set("database.password", db.Password)
 			v.Set("database.name", db.Name)
 			v.Set("database.ssl_mode", db.SslMode)
+
+			if db.RdsCa != nil && *db.RdsCa != "" {
+				caPath := "/tmp/db-ca.crt"
+				if err := os.WriteFile(caPath, []byte(*db.RdsCa), 0600); err != nil {
+					return Config{}, fmt.Errorf("failed to write database CA certificate: %w", err)
+				}
+				v.Set("database.ca_cert_path", caPath)
+			}
 		}
 	}
 
