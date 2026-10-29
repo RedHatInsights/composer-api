@@ -14,6 +14,7 @@ DB_NAME=$(jq -r '.database.name' "$ACG_CONFIG")
 DB_USER=$(jq -r '.database.username' "$ACG_CONFIG")
 DB_PASS=$(jq -r '.database.password' "$ACG_CONFIG")
 DB_SSLMODE=$(jq -r '.database.sslMode // "disable"' "$ACG_CONFIG")
+DB_RDSCERT=$(jq -r '.database.rdsCa // empty' "$ACG_CONFIG")
 
 for var in DB_HOST DB_PORT DB_NAME DB_USER DB_PASS; do
   val="${!var}"
@@ -26,7 +27,15 @@ done
 ENCODED_USER=$(printf '%s' "$DB_USER" | jq -Rr @uri)
 ENCODED_PASS=$(printf '%s' "$DB_PASS" | jq -Rr @uri)
 
-DATABASE_URL="postgres://${ENCODED_USER}:${ENCODED_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}"
+SSL_PARAMS="sslmode=${DB_SSLMODE}"
+if [[ -n "$DB_RDSCERT" ]]; then
+  CA_PATH="/tmp/db-ca.crt"
+  printf '%s\n' "$DB_RDSCERT" > "$CA_PATH"
+  chmod 0600 "$CA_PATH"
+  SSL_PARAMS="${SSL_PARAMS}&sslrootcert=${CA_PATH}"
+fi
+
+DATABASE_URL="postgres://${ENCODED_USER}:${ENCODED_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?${SSL_PARAMS}"
 
 echo "Running database migrations..."
 migrate -path /migrations -database "$DATABASE_URL" up
