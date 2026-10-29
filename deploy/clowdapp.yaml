@@ -39,7 +39,7 @@ objects:
         webServices:
           public:
             enabled: true
-            apiPath: composer
+            apiPath: subscription-composer
         replicas: ${{REPLICAS}}
         podSpec:
           image: ${IMAGE}:${IMAGE_TAG}
