@@ -16,9 +16,10 @@ var validLogLevels = []string{"debug", "info", "warn", "error"}
 
 // Config holds all application configuration.
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	Log      LogConfig      `mapstructure:"log"`
-	Database DatabaseConfig `mapstructure:"database"`
+	Server         ServerConfig         `mapstructure:"server"`
+	Log            LogConfig            `mapstructure:"log"`
+	Database       DatabaseConfig       `mapstructure:"database"`
+	FeatureService FeatureServiceConfig `mapstructure:"feature_service"`
 }
 
 type ServerConfig struct {
@@ -40,6 +41,13 @@ type DatabaseConfig struct {
 	User       string `mapstructure:"user"`
 	Password   string `mapstructure:"password"`
 	SSLMode    string `mapstructure:"ssl_mode"`
+	CACertPath string `mapstructure:"ca_cert_path"`
+}
+
+type FeatureServiceConfig struct {
+	URL        string `mapstructure:"url"`
+	CertPath   string `mapstructure:"cert_path"`
+	KeyPath    string `mapstructure:"key_path"`
 	CACertPath string `mapstructure:"ca_cert_path"`
 }
 
@@ -104,6 +112,12 @@ func Load() (Config, error) {
 		}
 	}
 
+	// Feature service config from environment variables.
+	_ = v.BindEnv("feature_service.url", "FEATURE_SERVICE_URL")
+	_ = v.BindEnv("feature_service.cert_path", "FEATURE_SERVICE_CERT_PATH")
+	_ = v.BindEnv("feature_service.key_path", "FEATURE_SERVICE_KEY_PATH")
+	_ = v.BindEnv("feature_service.ca_cert_path", "FEATURE_SERVICE_CA_CERT_PATH")
+
 	// Look for config.yaml in standard paths.
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
@@ -162,5 +176,18 @@ func validate(cfg Config) error {
 	if cfg.Database.Password == "" {
 		return fmt.Errorf("database.password must not be empty")
 	}
+
+	fs := cfg.FeatureService
+	fsFields := []string{fs.URL, fs.CertPath, fs.KeyPath}
+	set := 0
+	for _, f := range fsFields {
+		if f != "" {
+			set++
+		}
+	}
+	if set > 0 && set < len(fsFields) {
+		return fmt.Errorf("feature_service requires all of url, cert_path, and key_path when any is set")
+	}
+
 	return nil
 }

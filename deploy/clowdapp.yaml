@@ -22,6 +22,7 @@ parameters:
     value: 100m
   - name: CPU_LIMIT
     value: 500m
+  - name: FEATURE_SERVICE_URL
 objects:
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
@@ -43,6 +44,15 @@ objects:
         replicas: ${{REPLICAS}}
         podSpec:
           image: ${IMAGE}:${IMAGE_TAG}
+          env:
+            - name: FEATURE_SERVICE_URL
+              value: ${FEATURE_SERVICE_URL}
+            - name: FEATURE_SERVICE_CERT_PATH
+              value: /etc/composer-api/tls/tls.crt
+            - name: FEATURE_SERVICE_KEY_PATH
+              value: /etc/composer-api/tls/tls.key
+            - name: FEATURE_SERVICE_CA_CERT_PATH
+              value: /etc/composer-api/tls/ca.pem
           initContainers:
             - name: run-migrations
               inheritEnv: true
@@ -60,9 +70,22 @@ objects:
           - name: config
             configMap:
               name: composer-api-config
+          - name: tls-certs
+            secret:
+              secretName: composer-api-certificate
+              items:
+                - key: tls.crt
+                  path: tls.crt
+                - key: tls.key
+                  path: tls.key
+                - key: ca.pem
+                  path: ca.pem
           volumeMounts:
           - name: config
             mountPath: /etc/composer-api
+          - name: tls-certs
+            mountPath: /etc/composer-api/tls
+            readOnly: true
           livenessProbe:
             httpGet:
               path: /ping

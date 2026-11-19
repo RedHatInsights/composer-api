@@ -43,6 +43,13 @@ func TestValidate(t *testing.T) {
 		{"empty database name", func(c *Config) { c.Database.Name = "" }, "database.name must not be empty"},
 		{"empty database user", func(c *Config) { c.Database.User = "" }, "database.user must not be empty"},
 		{"empty database password", func(c *Config) { c.Database.Password = "" }, "database.password must not be empty"},
+		{"feature service all set", func(c *Config) {
+			c.FeatureService = FeatureServiceConfig{URL: "https://fs.example.com", CertPath: "/cert", KeyPath: "/key"}
+		}, ""},
+		{"feature service none set", func(c *Config) { c.FeatureService = FeatureServiceConfig{} }, ""},
+		{"feature service partial", func(c *Config) {
+			c.FeatureService = FeatureServiceConfig{URL: "https://fs.example.com"}
+		}, "feature_service requires all of url, cert_path, and key_path"},
 	}
 
 	for _, tt := range tests {
@@ -95,6 +102,11 @@ database:
   user: "admin"
   password: "secret"
   ssl_mode: "require"
+feature_service:
+  url: "https://feature.example.com"
+  cert_path: "/etc/composer-api/tls/tls.crt"
+  key_path: "/etc/composer-api/tls/tls.key"
+  ca_cert_path: "/etc/composer-api/tls/ca.pem"
 `
 
 func TestLoad_FromFile(t *testing.T) {
@@ -109,6 +121,12 @@ func TestLoad_FromFile(t *testing.T) {
 	}
 	if cfg.Database.Host != "dbhost" {
 		t.Errorf("expected database host %q, got %q", "dbhost", cfg.Database.Host)
+	}
+	if cfg.FeatureService.URL != "https://feature.example.com" {
+		t.Errorf("expected feature service URL %q, got %q", "https://feature.example.com", cfg.FeatureService.URL)
+	}
+	if cfg.FeatureService.CACertPath != "/etc/composer-api/tls/ca.pem" {
+		t.Errorf("expected feature service CA cert path %q, got %q", "/etc/composer-api/tls/ca.pem", cfg.FeatureService.CACertPath)
 	}
 }
 
