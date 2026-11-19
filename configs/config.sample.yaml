@@ -26,3 +26,9 @@ database:
   user: "postgres"
   password: "postgres"
   ssl_mode: "disable"
+
+feature_service:
+	"url":
+	"cert_path":
+	"key_path":
+	"ca_cert_path":
