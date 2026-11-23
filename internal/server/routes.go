@@ -84,6 +84,6 @@ func registerV1Routes(mux *http.ServeMux, commonMiddleware func(http.Handler) ht
 
 	wsHandler := commonMiddleware(wsMux)
 	mountResource(v1Mux, "/workspaces", wsHandler)
-	mux.Handle("/v1/", http.StripPrefix("/v1", v1Mux))
+	mountResource(mux, "/v1", v1Mux)
 
 }
