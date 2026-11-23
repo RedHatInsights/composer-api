@@ -10,16 +10,17 @@ import (
 	"github.com/RedHatInsights/composer-api/internal/response"
 )
 
-// mountResource registers h under prefix on mux using http.StripPrefix.
-// It also registers the bare prefix (without trailing slash) to prevent
-// Go's ServeMux from issuing a broken redirect after StripPrefix.
-func mountResource(mux *http.ServeMux, prefix string, h http.Handler) {
-	mux.Handle(prefix+"/", http.StripPrefix(prefix, h))
+// mountResource registers resourceHandler under prefix on mux using
+// http.StripPrefix. It also registers the bare prefix (without trailing
+// slash) to prevent Go's ServeMux from issuing a broken redirect after
+// StripPrefix.
+func mountResource(mux *http.ServeMux, prefix string, resourceHandler http.Handler) {
+	mux.Handle(prefix+"/", http.StripPrefix(prefix, resourceHandler))
 	mux.HandleFunc(prefix, func(w http.ResponseWriter, r *http.Request) {
 		r2 := r.Clone(r.Context())
 		r2.URL.Path = "/"
 		r2.URL.RawPath = ""
-		h.ServeHTTP(w, r2)
+		resourceHandler.ServeHTTP(w, r2)
 	})
 }
 
@@ -57,28 +58,32 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 //
 // To add a new resource:
 //
-//	fHandler := v1feature.New()
+//	f := v1feature.New()
 //	fMux := http.NewServeMux()
-//	fMux.HandleFunc("GET /", fHandler.List)
-//	fMiddleware := commonMiddleware(fMux)
-//	mountResource(v1Mux, "/features", fMiddleware)
+//	fMux.HandleFunc("GET /{$}", f.List)
+//	fHandler := commonMiddleware(fMux)
+//	mountResource(v1Mux, "/features", fHandler)
 //
-// To add resource-specific middleware, replace commonMiddleware with
-// a custom chain, e.g.:
+// To add resource-specific middleware, build a custom chain:
 //
-//	wsMiddleware := middleware.Chain(commonMiddleware, middleware.Auth, middleware.RBAC)(wsMux)
+//	authMiddleware := middleware.Chain(commonMiddleware, middleware.Auth, middleware.RBAC)
+//	fHandler := authMiddleware(fMux)
+//	mountResource(v1Mux, "/features", fHandler)
 func registerV1Routes(mux *http.ServeMux, commonMiddleware func(http.Handler) http.Handler) {
 	v1Mux := http.NewServeMux()
 	v1Mux.Handle("/", commonMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
 	})))
 
-	wsHandler := workspace.New()
+	ws := workspace.New()
 	wsMux := http.NewServeMux()
-	wsMux.HandleFunc("GET /", wsHandler.List)
-	wsMiddleware := commonMiddleware(wsMux)
+	wsMux.HandleFunc("GET /{$}", ws.List)
+	wsMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
+	})
 
-	mountResource(v1Mux, "/workspaces", wsMiddleware)
-	mountResource(mux, "/v1", v1Mux)
+	wsHandler := commonMiddleware(wsMux)
+	mountResource(v1Mux, "/workspaces", wsHandler)
+	mux.Handle("/v1/", http.StripPrefix("/v1", v1Mux))
 
 }
