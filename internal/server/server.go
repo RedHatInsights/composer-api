@@ -19,13 +19,13 @@ type Server struct {
 // handlers to stop work during shutdown.
 func New(ctx context.Context, cfg config.Config) *Server {
 	mux := http.NewServeMux()
-	registerRoutes(mux, cfg)
+	handler := registerRoutes(mux, cfg)
 
 	return &Server{
 		httpServer: &http.Server{
 			BaseContext:       func(_ net.Listener) context.Context { return ctx },
 			Addr:              net.JoinHostPort("", cfg.Server.Port),
-			Handler:           mux,
+			Handler:           handler,
 			ReadHeaderTimeout: 10 * time.Second,
 			ReadTimeout:       30 * time.Second,
 			WriteTimeout:      30 * time.Second,

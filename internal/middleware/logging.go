@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -41,9 +42,16 @@ func Logging(next http.Handler) http.Handler {
 		start := time.Now()
 		ctx := r.Context()
 
+		// Use RequestURI for logging because StripPrefix modifies r.URL.Path
+		// before this middleware runs, losing the original client path.
+		originalPath := r.RequestURI
+		if i := strings.IndexByte(originalPath, '?'); i >= 0 {
+			originalPath = originalPath[:i]
+		}
+
 		slog.InfoContext(ctx, "request received",
 			"method", r.Method,
-			"path", r.URL.Path,
+			"path", originalPath,
 			"query", r.URL.RawQuery,
 		)
 
@@ -53,7 +61,7 @@ func Logging(next http.Handler) http.Handler {
 
 		attrs := []any{
 			"method", r.Method,
-			"path", r.URL.Path,
+			"path", originalPath,
 			"status", wrapped.statusCode,
 			"duration_ms", time.Since(start).Milliseconds(),
 		}
