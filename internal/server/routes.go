@@ -51,6 +51,9 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 
 	// v1 Routes
 	apiMux := http.NewServeMux()
+	apiMux.Handle("/", commonMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
+	})))
 	registerV1Routes(apiMux, commonMiddleware)
 	mountResource(mux, basePath, middleware.Recover(apiMux))
 
