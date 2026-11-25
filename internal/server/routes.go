@@ -24,8 +24,15 @@ func mountResource(mux *http.ServeMux, prefix string, resourceHandler http.Handl
 	})
 }
 
+const basePath = "/api/subscription-composer"
+
+var notFoundHandler http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
+}
+
 // registerRoutes registers probe routes for liveness/readiness checks
-// and delegates versioned route groups to their own registration functions.
+// and delegates versioned route groups to their own registration functions,
+// mounting them under basePath.
 // It returns the top-level handler wrapped with TrailingSlash so that
 // paths with and without a trailing slash are handled consistently.
 func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
@@ -41,13 +48,14 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 	probeMux := http.NewServeMux()
 	probeMux.HandleFunc("GET /ping", probeHandler.Ping)
 	probeMux.HandleFunc("GET /health", probeHandler.Health)
-	probeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
-	})
+	probeMux.Handle("/", notFoundHandler)
 	mux.Handle("/", commonMiddleware(probeMux))
 
 	// v1 Routes
-	registerV1Routes(mux, commonMiddleware)
+	apiMux := http.NewServeMux()
+	apiMux.Handle("/", commonMiddleware(notFoundHandler))
+	registerV1Routes(apiMux, commonMiddleware)
+	mountResource(mux, basePath, middleware.Recover(apiMux))
 
 	return middleware.TrailingSlash(mux)
 }
@@ -71,16 +79,12 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 //	mountResource(v1Mux, "/features", fHandler)
 func registerV1Routes(mux *http.ServeMux, commonMiddleware func(http.Handler) http.Handler) {
 	v1Mux := http.NewServeMux()
-	v1Mux.Handle("/", commonMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
-	})))
+	v1Mux.Handle("/", commonMiddleware(notFoundHandler))
 
 	ws := workspace.New()
 	wsMux := http.NewServeMux()
 	wsMux.HandleFunc("GET /{$}", ws.List)
-	wsMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
-	})
+	wsMux.Handle("/", notFoundHandler)
 
 	wsHandler := commonMiddleware(wsMux)
 	mountResource(v1Mux, "/workspaces", wsHandler)
