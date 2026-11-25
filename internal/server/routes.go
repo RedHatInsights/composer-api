@@ -27,7 +27,7 @@ func mountResource(mux *http.ServeMux, prefix string, resourceHandler http.Handl
 const basePath = "/api/subscription-composer"
 
 // registerRoutes registers probe routes for liveness/readiness checks
-// and delegates versioned route groups to their own registration functions.
+// and mounts versioned API route groups under basePath.
 // It returns the top-level handler wrapped with TrailingSlash so that
 // paths with and without a trailing slash are handled consistently.
 func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
@@ -48,6 +48,7 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 	})
 	mux.Handle("/", commonMiddleware(probeMux))
 
+	// v1 Routes
 	apiMux := http.NewServeMux()
 	registerV1Routes(apiMux, commonMiddleware)
 	mountResource(mux, basePath, middleware.Recover(apiMux))
