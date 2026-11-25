@@ -26,6 +26,10 @@ func mountResource(mux *http.ServeMux, prefix string, resourceHandler http.Handl
 
 const basePath = "/api/subscription-composer"
 
+var notFoundHandler http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
+}
+
 // registerRoutes registers probe routes for liveness/readiness checks
 // and delegates versioned route groups to their own registration functions,
 // mounting them under basePath.
@@ -44,16 +48,12 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 	probeMux := http.NewServeMux()
 	probeMux.HandleFunc("GET /ping", probeHandler.Ping)
 	probeMux.HandleFunc("GET /health", probeHandler.Health)
-	probeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
-	})
+	probeMux.Handle("/", notFoundHandler)
 	mux.Handle("/", commonMiddleware(probeMux))
 
 	// v1 Routes
 	apiMux := http.NewServeMux()
-	apiMux.Handle("/", commonMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
-	})))
+	apiMux.Handle("/", commonMiddleware(notFoundHandler))
 	registerV1Routes(apiMux, commonMiddleware)
 	mountResource(mux, basePath, middleware.Recover(apiMux))
 
@@ -79,16 +79,12 @@ func registerRoutes(mux *http.ServeMux, cfg config.Config) http.Handler {
 //	mountResource(v1Mux, "/features", fHandler)
 func registerV1Routes(mux *http.ServeMux, commonMiddleware func(http.Handler) http.Handler) {
 	v1Mux := http.NewServeMux()
-	v1Mux.Handle("/", commonMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
-	})))
+	v1Mux.Handle("/", commonMiddleware(notFoundHandler))
 
 	ws := workspace.New()
 	wsMux := http.NewServeMux()
 	wsMux.HandleFunc("GET /{$}", ws.List)
-	wsMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		response.WriteError(r.Context(), w, response.NotFound().WithReasonStr("route not found"))
-	})
+	wsMux.Handle("/", notFoundHandler)
 
 	wsHandler := commonMiddleware(wsMux)
 	mountResource(v1Mux, "/workspaces", wsHandler)
